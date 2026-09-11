@@ -1,61 +1,55 @@
-# Unwritten — Vercel Edition
+# Unwritten — Vercel FastAPI Edition
 
-Serverless version of the Unwritten chatbot. Next.js (App Router + Tailwind) frontend talking to a FastAPI Python Serverless Function, with Google Gemini streaming.
+Serverless FastAPI backend for the Unwritten chatbot. Pure Python, no
+frontend build step — runs as a single Vercel Python Serverless Function.
 
-## Architecture
-
-Because Vercel Functions are stateless, this variant drops SQLite:
-
-- **Frontend:** Next.js / React chat UI (`app/`) — dark theme, sticky input, streaming `▌`.
-- **Backend:** FastAPI wrapped as a Python Serverless Function (`api/index.py`) with `StreamingResponse` (streaming is on by default for the Python runtime).
-- **State:** Chat history persists per-browser via `localStorage` (there is no server-side database).
+## Structure
 
 ```
 gemini-vercel-app/
 ├── api/
-│   ├── index.py              # FastAPI serverless function (/api/chat/stream)
-│   └── requirements.txt      # Python deps
-├── app/
-│   ├── page.tsx              # Chat UI
-│   ├── layout.tsx
-│   └── globals.css
-├── vercel.json               # Function config (maxDuration) — routing lives in next.config.mjs
-└── package.json
+│   └── index.py            # FastAPI entry point & routes
+├── vercel.json             # @vercel/python builder + routing
+└── requirements.txt        # Python dependencies
 ```
+
+## Endpoints
+
+- `GET /` → `{"status": "FastAPI is running on Vercel!"}`
+- `POST /api/chat/stream` → Server-Sent stream of Gemini text chunks
+
+## Request body (`/api/chat/stream`)
+
+```json
+{
+  "message": "Hello",
+  "history": [{"role": "user", "content": "hi"}],
+  "api_key": "optional client-supplied key",
+  "model": "gemini-2.5-flash",
+  "temperature": 0.7
+}
+```
+
+`api_key` is optional — if omitted, the server falls back to the
+`GEMINI_API_KEY` environment variable.
 
 ## Run locally
 
-To run the full stack locally, open two terminals:
-
 ```bash
-# terminal 1 — FastAPI serverless function
-npm run dev:py       # python -m uvicorn api.index:app --reload --port 8000
+python -m venv .venv
+.venv\Scripts\pip install -r requirements.txt   # Windows
+# (or: source .venv/bin/activate && pip install -r requirements.txt)
 
-# terminal 2 — Next.js dev server (proxies /api/* to :8000 in dev)
-npm run dev
+$env:GEMINI_API_KEY = "your key"               # Windows PowerShell
+# (or: export GEMINI_API_KEY="your key")
+
+uvicorn api.index:app --reload --port 8000
 ```
 
-Open http://localhost:3000 and add your Gemini key in the sidebar (or set `GEMINI_API_KEY`), then chat.
-
-> Tip: `vercel dev` also works — it runs both. It needs the Vercel CLI (`npm i -g vercel`) and does not require the uvicorn proxy (the Python function runs natively).
+Open http://localhost:8000 and test `/api/chat/stream`.
 
 ## Deploy to Vercel
 
-1. Push the folder to a Git repo, or run:
-   ```bash
-   npx vercel
-   npx vercel --prod
-   ```
-
-2. Add the environment variable in Vercel (Project → Settings → Environment Variables), or simply paste the key at runtime into the UI sidebar:
-   ```
-   GEMINI_API_KEY=<your-key>
-   ```
-
-3. The app is served from your Vercel URL. API docs are at `/docs`.
-
-## Notes
-
-- Streaming is enabled by default for Python Vercel Functions; `maxDuration: 60` is set in `vercel.json` for long LLM streams.
-- The API key entered in the sidebar is sent with each request on the client side (falls back to `GEMINI_API_KEY` on the server). For production, prefer server-side env var only.
-- Image payloads (`image_data` base64) are supported by the API but not exposed in the UI.
+1. Push this folder's contents to a Git repo connected to Vercel, or run
+   `npx vercel --prod` from this directory.
+2. Set the `GEMINI_API_KEY` environment variable in your Vercel project.
