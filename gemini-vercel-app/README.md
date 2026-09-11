@@ -19,20 +19,25 @@ gemini-vercel-app/
 │   ├── page.tsx              # Chat UI
 │   ├── layout.tsx
 │   └── globals.css
-├── vercel.json               # Routed /api/* -> api/index.py
+├── vercel.json               # Function config (maxDuration) — routing lives in next.config.mjs
 └── package.json
 ```
 
 ## Run locally
 
-Requires Vercel CLI (runs both Next.js and the Python function):
+To run the full stack locally, open two terminals:
 
 ```bash
-npm install
-vercel dev
+# terminal 1 — FastAPI serverless function
+npm run dev:py       # python -m uvicorn api.index:app --reload --port 8000
+
+# terminal 2 — Next.js dev server (proxies /api/* to :8000 in dev)
+npm run dev
 ```
 
 Open http://localhost:3000 and add your Gemini key in the sidebar (or set `GEMINI_API_KEY`), then chat.
+
+> Tip: `vercel dev` also works — it runs both. It needs the Vercel CLI (`npm i -g vercel`) and does not require the uvicorn proxy (the Python function runs natively).
 
 ## Deploy to Vercel
 
