@@ -1,0 +1,28 @@
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# vercel
+/.vercel
+
+# misc
+.DS_Store
+*.pem
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# env
+.env
+.env*.local

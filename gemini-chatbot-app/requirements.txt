@@ -1,0 +1,9 @@
+google-genai
+fastapi
+uvicorn
+streamlit
+python-dotenv
+pillow
+pydantic
+sqlmodel
+sqlalchemy
